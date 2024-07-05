@@ -1,0 +1,9 @@
+[package]
+name = "envelope"
+version = "0.1.0"
+authors = ["arcnemesys <accelerenzo@proton.me>"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+ratatui = "0.27.0"
