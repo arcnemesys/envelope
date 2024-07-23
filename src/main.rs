@@ -6,10 +6,12 @@ use crossterm::{
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
+    style::Style,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
     Terminal,
 };
 use std::env;
+use std::env::{remove_var, set_var, split_paths, var_os};
 use std::io;
 
 fn main() -> Result<(), io::Error> {
@@ -40,28 +42,34 @@ fn main() -> Result<(), io::Error> {
 
 struct App {
     env_vars: Vec<(String, String)>,
-    selected: usize,
+    selected_env_var: usize,
     editing: bool,
     edit_value: String,
-    list_state: ratatui::widgets::ListState,
+    env_list_state: ratatui::widgets::ListState,
+    path_list_state: ratatui::widgets::ListState,
 }
 
 impl App {
     fn new() -> App {
-        let mut list_state = ratatui::widgets::ListState::default();
-        list_state.select(Some(0));
+        let mut env_list_state = ratatui::widgets::ListState::default();
+        env_list_state.select(Some(0));
+        let mut path_list_state = ratatui::widgets::ListState::default();
+
         let env_vars = env::vars().collect();
         App {
             env_vars,
-            selected: 0,
+            selected_env_var: 0,
             editing: false,
             edit_value: String::new(),
-            list_state,
+            env_list_state,
+            path_list_state,
         }
     }
 
     fn selected_value(&self) -> &str {
-        &self.env_vars[self.selected].1
+        // Select the tuple in env_vars, at the index
+        // stored in self.selected, which defaults to zero.
+        &self.env_vars[self.selected_env_var].1
     }
 }
 
@@ -83,6 +91,38 @@ fn run_app<B: ratatui::backend::Backend>(
                 .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
                 .split(size);
 
+            let sub_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(chunks[0]);
+
+            let empty_block = Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default());
+
+            let key = "PATH";
+            let mut path_items: Vec<ListItem> = Vec::new();
+
+            let path_var = var_os(key);
+
+            match path_var {
+                Some(paths) => {
+                    for path in split_paths(&paths) {
+                        path_items.push(ListItem::new(format!("{:?}", path)));
+                    }
+                }
+                None => println!("{key} not set in current environment."),
+            }
+
+            let path_list = List::new(path_items)
+                .block(Block::default().borders(Borders::ALL).title("Path"))
+                .highlight_symbol(">>")
+                .highlight_style(
+                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
+                );
+
+            f.render_stateful_widget(path_list, sub_chunks[1], &mut app.path_list_state);
+
             let items: Vec<ListItem> = app
                 .env_vars
                 .iter()
@@ -96,7 +136,7 @@ fn run_app<B: ratatui::backend::Backend>(
                     ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
                 );
 
-            f.render_stateful_widget(list, chunks[0], &mut app.list_state);
+            f.render_stateful_widget(list, chunks[0], &mut app.env_list_state);
 
             let edit_paragraph = if app.editing {
                 Paragraph::new(app.edit_value.clone())
@@ -113,15 +153,15 @@ fn run_app<B: ratatui::backend::Backend>(
             match key.code {
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Down => {
-                    if !app.editing && app.selected < app.env_vars.len() - 1 {
-                        app.selected += 1;
-                        app.list_state.select(Some(app.selected));
+                    if !app.editing && app.selected_env_var < app.env_vars.len() - 1 {
+                        app.selected_env_var += 1;
+                        app.env_list_state.select(Some(app.selected_env_var));
                     }
                 }
                 KeyCode::Up => {
-                    if !app.editing && app.selected > 0 {
-                        app.selected -= 1;
-                        app.list_state.select(Some(app.selected));
+                    if !app.editing && app.selected_env_var > 0 {
+                        app.selected_env_var -= 1;
+                        app.env_list_state.select(Some(app.selected_env_var));
                     }
                 }
                 KeyCode::Char('e') => {
@@ -137,7 +177,7 @@ fn run_app<B: ratatui::backend::Backend>(
                 }
                 KeyCode::Enter => {
                     if app.editing {
-                        app.env_vars[app.selected].1 = app.edit_value.clone();
+                        app.env_vars[app.selected_env_var].1 = app.edit_value.clone();
                         app.editing = false;
                     }
                 }
