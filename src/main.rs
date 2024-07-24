@@ -1,3 +1,4 @@
+use app::App;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -38,39 +39,6 @@ fn main() -> Result<(), io::Error> {
     }
 
     Ok(())
-}
-
-struct App {
-    env_vars: Vec<(String, String)>,
-    selected_env_var: usize,
-    editing: bool,
-    edit_value: String,
-    env_list_state: ratatui::widgets::ListState,
-    path_list_state: ratatui::widgets::ListState,
-}
-
-impl App {
-    fn new() -> App {
-        let mut env_list_state = ratatui::widgets::ListState::default();
-        env_list_state.select(Some(0));
-        let mut path_list_state = ratatui::widgets::ListState::default();
-
-        let env_vars = env::vars().collect();
-        App {
-            env_vars,
-            selected_env_var: 0,
-            editing: false,
-            edit_value: String::new(),
-            env_list_state,
-            path_list_state,
-        }
-    }
-
-    fn selected_value(&self) -> &str {
-        // Select the tuple in env_vars, at the index
-        // stored in self.selected, which defaults to zero.
-        &self.env_vars[self.selected_env_var].1
-    }
 }
 
 fn run_app<B: ratatui::backend::Backend>(
@@ -150,6 +118,8 @@ fn run_app<B: ratatui::backend::Backend>(
         })?;
 
         if let Event::Key(key) = event::read()? {
+            // We have to alter the keycodes to differentiate between which list is being edited
+            // in order to stop them from scrolling in sync
             match key.code {
                 KeyCode::Char('q') => return Ok(()),
                 KeyCode::Down => {
