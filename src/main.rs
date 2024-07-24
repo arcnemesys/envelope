@@ -1,9 +1,9 @@
-use app::App;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use envelope::app::App;
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -46,77 +46,6 @@ fn run_app<B: ratatui::backend::Backend>(
     mut app: App,
 ) -> io::Result<()> {
     loop {
-        terminal.draw(|f| {
-            let size = f.size();
-
-            let block = Block::default()
-                .borders(Borders::ALL)
-                .title("Environment Variables");
-            f.render_widget(block, size);
-
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
-                .split(size);
-
-            let sub_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                .split(chunks[0]);
-
-            let empty_block = Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default());
-
-            let key = "PATH";
-            let mut path_items: Vec<ListItem> = Vec::new();
-
-            let path_var = var_os(key);
-
-            match path_var {
-                Some(paths) => {
-                    for path in split_paths(&paths) {
-                        path_items.push(ListItem::new(format!("{:?}", path)));
-                    }
-                }
-                None => println!("{key} not set in current environment."),
-            }
-
-            let path_list = List::new(path_items)
-                .block(Block::default().borders(Borders::ALL).title("Path"))
-                .highlight_symbol(">>")
-                .highlight_style(
-                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
-                );
-
-            f.render_stateful_widget(path_list, sub_chunks[1], &mut app.path_list_state);
-
-            let items: Vec<ListItem> = app
-                .env_vars
-                .iter()
-                .map(|(key, value)| ListItem::new(format!("{}: {}", key, value)))
-                .collect();
-
-            let list = List::new(items)
-                .block(Block::default().borders(Borders::ALL).title("Variables"))
-                .highlight_symbol(">>")
-                .highlight_style(
-                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
-                );
-
-            f.render_stateful_widget(list, chunks[0], &mut app.env_list_state);
-
-            let edit_paragraph = if app.editing {
-                Paragraph::new(app.edit_value.clone())
-                    .block(Block::default().borders(Borders::ALL).title("Edit Value"))
-            } else {
-                Paragraph::new(app.selected_value())
-                    .block(Block::default().borders(Borders::ALL).title("Value"))
-            };
-
-            f.render_widget(edit_paragraph, chunks[1]);
-        })?;
-
         if let Event::Key(key) = event::read()? {
             // We have to alter the keycodes to differentiate between which list is being edited
             // in order to stop them from scrolling in sync

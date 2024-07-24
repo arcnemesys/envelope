@@ -1,79 +1,84 @@
+use ratatui::prelude::*;
 use ratatui::{
     layout::{Alignment, Constraint, Layout},
     style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph, List, ListItem},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
-use ratatui::prelude::*;
+use std::env::{split_paths, var_os};
 
-use std::env;
 use crate::app::App;
+use std::env;
 
 /// Renders the user interface widgets.
-pub fn render(app: &mut App, frame: &mut Frame) {
+pub fn render(app: &mut App, f: &mut Frame) {
     // This is where you add new widgets.
     // See the following resources:
     // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
     // - https://github.com/ratatui-org/ratatui/tree/master/examples
 
-    let top_level_sections = Layout::default()
+    let size = f.size();
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Environment Variables");
+    f.render_widget(block, size);
+
+    let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Min(1),
-            Constraint::Length(3)
-        ])
-        .split(frame.size());
+        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
+        .split(size);
 
-    let title_block = Block::default()
-            .borders(Borders::ALL)
-            .style(Style::default());
-    let title = Paragraph::new(Text::styled(
-        "Envelope", 
-        Style::default().fg(Color::Green).bg(Color::Black),))
-        .block(title_block).centered();
-
-        let sub_sections = Layout::default()
+    let sub_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
-        .split(top_level_sections[1]);
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(chunks[0]);
 
-    frame.render_widget(title, top_level_sections[0]);
+    let empty_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
 
-    let mut env_var_list_items = Vec::<ListItem>::new();
-    let mut env_val_list_items = Vec::<ListItem>::new();
+    let key = "PATH";
+    let mut path_items: Vec<ListItem> = Vec::new();
 
-    let mut env_vars = env::vars();
+    let path_var = var_os(key);
 
-
-    
-    for (key, value) in env_vars {
-        env_var_list_items.push(
-            ListItem::new(Line::from(Span::styled(
-                format!("Environment Variable: {}", key),
-                Style::default().fg(Color::Green)))));
-                
-        env_val_list_items.push(ListItem::new(Line::from(Span::styled(
-            format!("Variable Value: {}", value),
-            Style::default().fg(Color::Green)))));
- 
+    match path_var {
+        Some(paths) => {
+            for path in split_paths(&paths) {
+                path_items.push(ListItem::new(format!("{:?}", path)));
+            }
+        }
+        None => println!("{key} not set in current environment."),
     }
 
-    let env_var_list = List::new(env_var_list_items);
-    let env_val_list = List::new(env_val_list_items);
+    let path_list = List::new(path_items)
+        .block(Block::default().borders(Borders::ALL).title("Path"))
+        .highlight_symbol(">>")
+        .highlight_style(ratatui::style::Style::default().fg(ratatui::style::Color::Yellow));
 
-    frame.render_widget(env_var_list, sub_sections[0]);
-    frame.render_widget(env_val_list, sub_sections[1]);
+    f.render_stateful_widget(path_list, sub_chunks[1], &mut app.path_list_state);
 
-    
-    let controls_block = Paragraph::new(
-        format!("Press `Esc`, `Ctrl-C` or `q` to stop running",))
-        .block(Block::bordered()
-        .title("Controls")
-        .title_alignment(Alignment::Center)
-        .border_type(BorderType::Rounded))
-        .style(Style::default().fg(Color::Cyan).bg(Color::Black));
+    let items: Vec<ListItem> = app
+        .env_vars
+        .iter()
+        .map(|(key, value)| ListItem::new(format!("{}: {}", key, value)))
+        .collect();
 
-    frame.render_widget(controls_block, top_level_sections[2]);
-        
+    let list = List::new(items)
+        .block(Block::default().borders(Borders::ALL).title("Variables"))
+        .highlight_symbol(">>")
+        .highlight_style(ratatui::style::Style::default().fg(ratatui::style::Color::Yellow));
+
+    f.render_stateful_widget(list, chunks[0], &mut app.env_list_state);
+
+    let edit_paragraph = if app.editing {
+        Paragraph::new(app.edit_value.clone())
+            .block(Block::default().borders(Borders::ALL).title("Edit Value"))
+    } else {
+        Paragraph::new(app.selected_value())
+            .block(Block::default().borders(Borders::ALL).title("Value"))
+    };
+
+    f.render_widget(edit_paragraph, chunks[1]);
 }
