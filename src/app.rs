@@ -20,6 +20,10 @@ pub struct App {
     pub path_list_state: ratatui::widgets::ListState,
     /// Boolean to determine if app is running,
     pub running: bool,
+    /// The current screen the user is on
+    pub current_screen: CurrentScreen,
+    /// Houses the state indicating a user is editing environment variables
+    pub currently_editing: Option<CurrentlyEditing>,
 }
 
 impl App {
@@ -37,6 +41,8 @@ impl App {
             env_list_state,
             path_list_state,
             running: true,
+            current_screen: CurrentScreen::Main,
+            currently_editing: None,
         }
     }
 
@@ -49,14 +55,30 @@ impl App {
     pub fn quit(&mut self) {
         self.running = false;
     }
+
+    pub fn toggle_editing(&mut self) {
+        if let Some(editing) = &self.currently_editing {
+            match editing {
+                CurrentlyEditing::PathVar => {
+                    self.currently_editing = Some(CurrentlyEditing::EnvVarValue)
+                }
+                CurrentlyEditing::EnvVarValue => {
+                    self.currently_editing = Some(CurrentlyEditing::PathVar)
+                }
+            };
+        } else {
+            self.currently_editing = Some(CurrentlyEditing::EnvVarValue);
+        }
+    }
 }
 
 pub enum CurrentScreen {
     Main,
     Editing,
+    Path,
     Exiting,
 }
 pub enum CurrentlyEditing {
-    Key,
-    Value,
+    EnvVarValue,
+    PathVar,
 }

@@ -1,14 +1,13 @@
 use ratatui::prelude::*;
 use ratatui::{
-    layout::{Alignment, Constraint, Layout},
-    style::{Color, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
+    layout::{Constraint, Layout},
+    style::Style,
+    widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
 use std::env::{split_paths, var_os};
 
 use crate::app::App;
-use std::env;
 
 /// Renders the user interface widgets.
 pub fn render(app: &mut App, f: &mut Frame) {
