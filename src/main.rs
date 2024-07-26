@@ -2,6 +2,8 @@ use envelope::app::{App, AppResult};
 use envelope::event::{Event, EventHandler};
 use envelope::handler::handle_key_events;
 use envelope::tui::Tui;
+use ratatui::style::Style;
+use ratatui::widgets::ListItem;
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
 
@@ -27,6 +29,10 @@ fn main() -> AppResult<()> {
     tui.exit()?;
     Ok(())
 }
+
+
+
+
 
 // fn run_app<B: ratatui::backend::Backend>(
 //     terminal: &mut Terminal<B>,

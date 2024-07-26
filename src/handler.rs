@@ -1,4 +1,5 @@
 use crate::app::{App, AppResult, CurrentScreen};
+use crate::ui::{active, inactive};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Handles the key events and updates the state of [`App`].
@@ -22,19 +23,24 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Char('e') => {
             if !app.editing {
                 app.editing = true;
-                app.edit_value = app.selected_value().to_string();
+                app.env_var_value = app.selected_value().to_string();
             }
         }
         KeyCode::Char(c) => {
             if app.editing {
-                app.edit_value.push(c)
+                app.env_var_value.push(c)
             }
         }
         KeyCode::Backspace => {
             if app.editing {
-                app.edit_value.pop();
+                app.env_var_value.pop();
             }
         }
+        KeyCode::Tab => {
+            inactive(app.active_list.clone());
+            active(app.inactive_list.clone());
+        }
+        KeyCode::Down => {}
         // Other handlers you could add here.
         _ => {}
     }
