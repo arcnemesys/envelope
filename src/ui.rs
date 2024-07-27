@@ -19,7 +19,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)].as_ref())
+        .constraints([Constraint::Percentage(65), Constraint::Percentage(35)].as_ref())
         .split(size);
 
     let sub_chunks = Layout::default()
@@ -73,5 +73,14 @@ pub fn render(app: &mut App, f: &mut Frame) {
             .block(Block::default().borders(Borders::ALL).title("Value"))
     };
 
-    f.render_widget(edit_paragraph, chunks[1]);
+    let footer_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
+        .split(chunks[1]);
+
+    let controls = Paragraph::new("exit: q/esc, edit: e, save: Enter ")
+        .block(Block::default().borders(Borders::ALL).title("Controls"));
+
+    f.render_widget(controls, footer_chunks[1]);
+    f.render_widget(edit_paragraph, footer_chunks[0]);
 }

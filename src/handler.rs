@@ -4,7 +4,7 @@ use std::env::{remove_var, set_var};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match key_event.code {
-        KeyCode::Char('q') => {
+        KeyCode::Char('q') | KeyCode::Enter => {
             app.quit();
         }
         KeyCode::Char('c') | KeyCode::Char('C') => {
