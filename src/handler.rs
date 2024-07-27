@@ -1,5 +1,6 @@
 use crate::app::{ActiveList, App, AppResult};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use std::env::{remove_var, set_var};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match key_event.code {
@@ -50,13 +51,13 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         },
         KeyCode::Up => match app.activated_list {
             ActiveList::EnvList => {
-                if !app.editing && app.selected_env_var < app.env_vars.len() - 1 {
-                    app.selected_env_var += 1;
+                if !app.editing && app.selected_env_var > 0 {
+                    app.selected_env_var -= 1;
                     app.env_list_state.select(Some(app.selected_env_var))
                 }
             }
             ActiveList::PathList => {
-                if app.selected_path_dir < app.path_var_dirs.len() - 1 {
+                if app.selected_path_dir > 0 {
                     app.selected_path_dir += 1;
                     app.path_list_state.select(Some(app.selected_path_dir))
                 }
@@ -65,6 +66,8 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Enter => {
             if app.editing {
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
+                let key = app.env_vars[app.selected_env_var].0.clone();
+                set_var(key, app.env_var_value.clone());
                 app.editing = false;
             }
         }
