@@ -45,11 +45,12 @@ pub fn render(app: &mut App, f: &mut Frame) {
         Some(paths) => {
             for path in split_paths(&paths) {
                 path_items.push(ListItem::new(format!("{:?}", path.clone())));
-                path_vars.push(path)
+                path_vars.push(path);
             }
         }
         None => println!("{key} not set in current environment."),
     }
+    app.path_var_dirs = path_vars;
 
     let mut _path_list = List::new(path_items);
 

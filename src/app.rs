@@ -2,6 +2,7 @@ use ratatui::widgets::List;
 use ratatui::widgets::ListItem;
 use std::env;
 use std::error;
+use std::path::PathBuf;
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -10,7 +11,7 @@ pub struct App<'a, 'b> {
     /// Houses environment variables for the current environment.
     pub env_vars: Vec<(String, String)>,
     /// Houses the directories stored in the path variable.
-    pub path_var_dirs: Vec<String>,
+    pub path_var_dirs: Vec<PathBuf>,
     /// Specifies which environment variable is currently being edited.
     pub selected_env_var: usize,
     /// Specifies which path variable is currently being edited.
@@ -80,19 +81,10 @@ impl<'a, 'b> App<'a, 'b> {
         self.running = false;
     }
 
-    pub fn toggle_editing(&mut self) {
-        if let Some(editing) = &self.currently_editing {
-            match editing {
-                CurrentlyEditing::PathVar => {
-                    self.currently_editing = Some(CurrentlyEditing::EnvVarValue)
-                }
-                CurrentlyEditing::EnvVarValue => {
-                    self.currently_editing = Some(CurrentlyEditing::PathVar)
-                }
-                _ => {}
-            };
-        } else {
-            self.currently_editing = Some(CurrentlyEditing::EnvVarValue);
+    pub fn toggle_active(&mut self) {
+        match self.activated_list {
+            ActiveList::EnvList => self.activated_list = ActiveList::PathList,
+            ActiveList::PathList => self.activated_list = ActiveList::EnvList,
         }
     }
 }

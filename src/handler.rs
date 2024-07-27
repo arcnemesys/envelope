@@ -40,6 +40,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             inactive(&mut app.active_list.clone());
             let active_index = app.list_index;
             app.list_index = (active_index + 1) % 2;
+            app.toggle_active();
             active(&mut app.inactive_list.clone());
         }
         KeyCode::Down => match app.activated_list {
