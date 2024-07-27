@@ -2,7 +2,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::block::Title;
 use ratatui::{
     layout::{Constraint, Layout},
-    style::Style,
+    style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
@@ -38,21 +38,22 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let key = "PATH";
     let mut path_items: Vec<ListItem> = Vec::new();
-
+    let mut path_vars = Vec::new();
     let path_var = var_os(key);
 
     match path_var {
         Some(paths) => {
             for path in split_paths(&paths) {
-                path_items.push(ListItem::new(format!("{:?}", path)));
+                path_items.push(ListItem::new(format!("{:?}", path.clone())));
+                path_vars.push(path)
             }
         }
         None => println!("{key} not set in current environment."),
     }
 
-    let mut path_list = List::new(path_items);
+    let mut _path_list = List::new(path_items);
 
-    path_list
+    let path_list = _path_list
         .clone()
         .block(
             Block::default()
@@ -60,9 +61,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
                 .title(Title::from("Path").alignment(Alignment::Center)),
         )
         .highlight_symbol(">>")
-        .highlight_style(ratatui::style::Style::default());
-
-    f.render_stateful_widget(&path_list.clone(), sub_chunks[1], &mut app.path_list_state);
+        .highlight_style(ratatui::style::Style::default().fg(Color::LightGreen));
 
     let env_items: Vec<ListItem> = app
         .env_vars
@@ -70,23 +69,25 @@ pub fn render(app: &mut App, f: &mut Frame) {
         .map(|(key, value)| ListItem::new(format!("{}: {}", key, value)))
         .collect();
 
-    let mut env_list = List::new(env_items);
+    let _env_list = List::new(env_items);
+
+    let env_list = _env_list
+        .clone()
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Title::from("Environment Variables").alignment(Alignment::Center)),
+        )
+        .highlight_symbol(">>")
+        .highlight_style(ratatui::style::Style::default().fg(Color::Yellow));
+
     let mut lists = vec![env_list.clone(), path_list.clone()];
-
-    // env_list
-    //     .clone()
-    //     .block(
-    //         Block::default()
-    //             .borders(Borders::ALL)
-    //             .title(Title::from("Environment Variables").alignment(Alignment::Center)),
-    //     )
-    //     .highlight_symbol(">>")
-    //     .highlight_style(ratatui::style::Style::default());
-
     app.active_list = env_list.clone();
-    active(lists[0].clone());
-    inactive(lists[1].clone());
+    app.inactive_list = path_list.clone();
+    active(&mut lists[0].clone());
+    inactive(&mut lists[1].clone());
     f.render_stateful_widget(env_list.clone(), chunks[0], &mut app.env_list_state);
+    f.render_stateful_widget(&path_list.clone(), sub_chunks[1], &mut app.path_list_state);
 
     let edit_paragraph = if app.editing {
         Paragraph::new(app.env_var_value.clone())
@@ -99,26 +100,27 @@ pub fn render(app: &mut App, f: &mut Frame) {
     f.render_widget(edit_paragraph, chunks[1]);
 }
 
-pub fn active(mut list: List) {
+pub fn active(list: &mut List) {
     let active_block = Block::new()
         .borders(Borders::ALL)
         .border_style(Style::new().blue())
-        .title(Title::from("Environment Variables").alignment(Alignment::Center))
         .title(Title::from("Active").alignment(Alignment::Right));
 
-    let active_list = list
+    let mut active_list = list
         .clone()
         .block(active_block)
         .highlight_symbol(">>")
-        .highlight_style(ratatui::style::Style::default());
+        .highlight_style(Style::default().fg(Color::Magenta));
 
-    list = active_list;
+    let list = &mut active_list;
 }
 
-pub fn inactive(mut list: List) {
+pub fn inactive(list: &mut List) {
     let inactive_block = Block::new()
         .borders(Borders::ALL)
         .border_style(Style::new().fg(Color::DarkGray))
-        .title(Title::from("Active").alignment(Alignment::Right));
-    let active_list = list.clone().block(inactive_block);
+        .title(Title::from("Inactive").alignment(Alignment::Right));
+    let mut inactive_list = list.clone().block(inactive_block);
+
+    let list = &mut inactive_list;
 }

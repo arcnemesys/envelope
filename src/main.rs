@@ -30,10 +30,6 @@ fn main() -> AppResult<()> {
     Ok(())
 }
 
-
-
-
-
 // fn run_app<B: ratatui::backend::Backend>(
 //     terminal: &mut Terminal<B>,
 //     mut app: App,
@@ -43,12 +39,7 @@ fn main() -> AppResult<()> {
 //             // We have to alter the keycodes to differentiate between which list is being edited
 //             // in order to stop them from scrolling in sync
 //             match key.code {
-//                 KeyCode::Down => {
-//                     if !app.editing && app.selected_env_var < app.env_vars.len() - 1 {
-//                         app.selected_env_var += 1;
-//                         app.env_list_state.select(Some(app.selected_env_var));
-//                     }
-//                 }
+
 //                 KeyCode::Up => {
 //                     if !app.editing && app.selected_env_var > 0 {
 //                         app.selected_env_var -= 1;

@@ -34,6 +34,7 @@ pub struct App<'a, 'b> {
     pub list_index: u32,
     pub active_list: List<'a>,
     pub inactive_list: List<'b>,
+    pub activated_list: ActiveList,
 }
 
 pub enum ActiveList {
@@ -65,6 +66,7 @@ impl<'a, 'b> App<'a, 'b> {
             list_index: 0,
             active_list: List::new(vec![ListItem::new("")]),
             inactive_list: List::new(vec![ListItem::new("")]),
+            activated_list: ActiveList::EnvList,
         }
     }
 

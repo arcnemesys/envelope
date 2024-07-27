@@ -1,4 +1,4 @@
-use crate::app::{App, AppResult, CurrentScreen};
+use crate::app::{ActiveList, App, AppResult, CurrentScreen};
 use crate::ui::{active, inactive};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
@@ -37,10 +37,25 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
         }
         KeyCode::Tab => {
-            inactive(app.active_list.clone());
-            active(app.inactive_list.clone());
+            inactive(&mut app.active_list.clone());
+            let active_index = app.list_index;
+            app.list_index = (active_index + 1) % 2;
+            active(&mut app.inactive_list.clone());
         }
-        KeyCode::Down => {}
+        KeyCode::Down => match app.activated_list {
+            ActiveList::EnvList => {
+                if !app.editing && app.selected_env_var < app.env_vars.len() - 1 {
+                    app.selected_env_var += 1;
+                    app.env_list_state.select(Some(app.selected_env_var))
+                }
+            }
+            ActiveList::PathList => {
+                if app.selected_path_dir < app.path_var_dirs.len() - 1 {
+                    app.selected_path_dir += 1;
+                    app.path_list_state.select(Some(app.selected_path_dir))
+                }
+            }
+        },
         // Other handlers you could add here.
         _ => {}
     }
