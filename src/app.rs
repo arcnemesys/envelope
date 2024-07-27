@@ -14,6 +14,8 @@ pub struct App {
     pub path_var_dirs: Vec<PathBuf>,
     /// Specifies which environment variable is currently being edited.
     pub selected_env_var: usize,
+    /// Specifies the environment variable name associated with the value.
+    pub selected_env_key: String,
     /// Specifies which path variable is currently being edited.
     pub selected_path_dir: usize,
     /// Specifies whether or not the app is in an `editing` state.
@@ -63,6 +65,7 @@ impl App {
             env_vars,
             path_var_dirs,
             selected_env_var: 0,
+            selected_env_key: String::new(),
             selected_path_dir: 0,
             editing: false,
             env_var_value: String::new(),

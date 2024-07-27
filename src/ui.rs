@@ -14,7 +14,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .title("Environment Variables");
+        .title("Environment Variables")
+        .bg(Color::Rgb(51, 0, 25));
     f.render_widget(block, size);
 
     let chunks = Layout::default()
@@ -42,7 +43,11 @@ pub fn render(app: &mut App, f: &mut Frame) {
                 .title(Title::from("Path").alignment(Alignment::Center)),
         )
         .highlight_symbol(">>")
-        .highlight_style(ratatui::style::Style::default().fg(Color::LightGreen));
+        .highlight_style(
+            ratatui::style::Style::default()
+                .fg(Color::Rgb(185, 185, 220))
+                .bg(Color::Rgb(28, 13, 41)),
+        );
 
     let env_items: Vec<ListItem> = app
         .env_vars
@@ -60,7 +65,11 @@ pub fn render(app: &mut App, f: &mut Frame) {
                 .title(Title::from("Environment Variables").alignment(Alignment::Center)),
         )
         .highlight_symbol(">>")
-        .highlight_style(ratatui::style::Style::default().fg(Color::Yellow));
+        .highlight_style(
+            ratatui::style::Style::default()
+                .fg(Color::Rgb(185, 185, 220))
+                .bg(Color::Rgb(28, 13, 41)),
+        );
 
     f.render_stateful_widget(env_list, sub_chunks[0], &mut app.env_list_state);
     f.render_stateful_widget(path_list, sub_chunks[1], &mut app.path_list_state);
@@ -75,12 +84,20 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let footer_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
+        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
         .split(chunks[1]);
+    let control_span = Span::styled(
+        "exit: q/esc, edit: e, save: Enter, switch: Tab ",
+        Style::new().white(),
+    );
+    let control_footer = Paragraph::new(control_span)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Title::from("Controls").alignment(Alignment::Center)),
+        )
+        .alignment(Alignment::Center);
 
-    let controls = Paragraph::new("exit: q/esc, edit: e, save: Enter ")
-        .block(Block::default().borders(Borders::ALL).title("Controls"));
-
-    f.render_widget(controls, footer_chunks[1]);
     f.render_widget(edit_paragraph, footer_chunks[0]);
+    f.render_widget(control_footer, footer_chunks[1]);
 }
