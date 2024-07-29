@@ -4,7 +4,7 @@ use std::env::{remove_var, set_var};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match key_event.code {
-        KeyCode::Char('q') | KeyCode::Enter => {
+        KeyCode::Char('q') | KeyCode::Esc => {
             app.quit();
         }
         KeyCode::Char('c') | KeyCode::Char('C') => {
@@ -45,6 +45,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             ActiveList::PathList => {
                 if app.selected_path_dir < app.path_var_dirs.len() - 1 {
                     app.selected_path_dir += 1;
+                    app.path_var_value = app.path_var_dirs[app.selected_path_dir].clone();
                     app.path_list_state.select(Some(app.selected_path_dir))
                 }
             }
@@ -59,18 +60,20 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             ActiveList::PathList => {
                 if app.selected_path_dir > 0 {
                     app.selected_path_dir += 1;
+                    app.path_var_value = app.path_var_dirs[app.selected_path_dir].clone();
                     app.path_list_state.select(Some(app.selected_path_dir))
                 }
             }
         },
-        KeyCode::Enter => {
-            if app.editing {
+        KeyCode::Enter => match app.activated_list {
+            ActiveList::EnvList => {
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
                 set_var(key, app.env_var_value.clone());
                 app.editing = false;
             }
-        }
+            _ => {}
+        },
         _ => {}
     }
     Ok(())
