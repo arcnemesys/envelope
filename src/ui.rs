@@ -96,15 +96,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(footer_chunks[0]);
 
-    let edit_path = Paragraph::new(
-        app.path_var_value
-            .clone()
-            .to_str()
-            .to_owned()
-            .unwrap()
-            .to_string(),
-    )
-    .block(Block::default().borders(Borders::ALL).title("Edit Value"));
+    let edit_path = Paragraph::new(app.path_var_value.clone())
+        .block(Block::default().borders(Borders::ALL).title("Edit Value"));
     let control_footer = Paragraph::new(control_span)
         .block(
             Block::default()

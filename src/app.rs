@@ -23,7 +23,8 @@ pub struct App {
     /// Houses the edited environment variable value string.
     pub env_var_value: String,
     /// Houses the path variable being edited.
-    pub path_var_value: PathBuf,
+    pub path_var_value: String,
+    pub path_var_edit: String,
     /// Houses the edited environment variable key string.
     pub env_var_key: String,
     /// Holds the state of the list of environment variables
@@ -78,7 +79,8 @@ impl App {
             currently_editing: None,
             list_index: 0,
             activated_list: ActiveList::EnvList,
-            path_var_value: PathBuf::new(),
+            path_var_value: String::new(),
+            path_var_edit: String::new(),
         }
     }
 
