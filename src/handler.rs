@@ -1,7 +1,9 @@
-use crate::app::{ActiveList, App, AppResult};
+use crate::app::{set_environment_variable, ActiveList, App, AppResult};
+use env_perm::{append, set};
+use globalenv::set_var;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::{
-    env::{join_paths, remove_var, set_var},
+    env::{join_paths, remove_var},
     path::PathBuf,
 };
 
@@ -98,14 +100,18 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             ActiveList::EnvList => {
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
-                set_var(key, app.env_var_value.clone());
+                set(
+                    &key[..].to_ascii_uppercase(),
+                    &app.env_var_value.clone()[..],
+                )
+                .unwrap();
                 app.editing = !app.editing;
             }
             ActiveList::PathList => {
                 app.path_var_dirs[app.selected_path_dir] =
                     PathBuf::from(app.path_var_value.clone());
                 let new_path = join_paths(app.path_var_dirs.clone())?;
-                set_var("PATH", new_path);
+                set_var("PATH", new_path.to_str().unwrap());
                 app.editing = !app.editing;
             }
         },

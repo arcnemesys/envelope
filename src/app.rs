@@ -3,7 +3,12 @@ use ratatui::widgets::ListItem;
 use std::env;
 use std::env::{split_paths, var_os};
 use std::error;
+use std::fs::read_to_string;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
@@ -111,4 +116,37 @@ pub enum CurrentlyEditing {
     EnvVarValue,
     EnvVarName,
     PathVar,
+}
+
+pub fn set_environment_variable(key: String, value: String) {
+    let home_dir = env::var("HOME").expect("Failed to get home directory.");
+
+    let bashrc_path = Path::new(&home_dir).join(".bashrc");
+
+    let mut bashrc_content = read_to_string(&bashrc_path).unwrap();
+
+    let mut updated = false;
+
+    let lines: Vec<String> = bashrc_content
+        .lines()
+        .map(|line| {
+            if line.starts_with(&format!("export {}=", key)) {
+                updated = true;
+                format!("export {}=\"{}\"", key, value)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect();
+
+    if !updated {
+        bashrc_content.push_str(&format!("\nexport {}\"{}\"\n", key, value));
+    } else {
+        bashrc_content = lines.join("\n");
+    }
+
+    Command::new("source")
+        .arg(bashrc_path)
+        .spawn()
+        .expect("Could not spawn process");
 }

@@ -52,7 +52,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
     let env_items: Vec<ListItem> = app
         .env_vars
         .iter()
-        .map(|(key, value)| ListItem::new(format!("{}: {}", key, value)))
+        .map(|(key, value)| ListItem::new(format!("{}: {}\n", key, value)))
         .collect();
 
     let _env_list = List::new(env_items);
