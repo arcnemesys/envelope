@@ -1,6 +1,6 @@
 ## Overview
 
-
+![A terminal with a vertically split list of environment variables and path components](/assets/envelope.jpg)
 
 Envelope is a very simple application, that allows for viewing and updating the environment variables, and viewing the components of the path variable on your system. The main driver behind the development of Envelope was to further my understanding of:
 - [Ratatui](https://ratatui.rs/), a library for building TUIs, that underlies *more than a few* [exceptional applications](https://github.com/ratatui/awesome-ratatui?tab=readme-ov-file#-apps).
