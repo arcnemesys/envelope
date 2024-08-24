@@ -2,8 +2,10 @@ use crate::app::{set_environment_variable, ActiveList, App, AppResult};
 use env_perm::{append, set};
 use globalenv::set_var;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::{
-    env::{join_paths, remove_var},
+    env::{self, join_paths, remove_var},
     path::PathBuf,
 };
 
@@ -100,11 +102,17 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             ActiveList::EnvList => {
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
-                set(
-                    &key[..].to_ascii_uppercase(),
-                    &app.env_var_value.clone()[..],
-                )
-                .unwrap();
+                let home = std::env::var("HOME").expect("Couldn't get user home directory");
+                let mut home_dir = std::path::PathBuf::from(home);
+                home_dir.push(app.shell.clone());
+                let mut shell_config = OpenOptions::new().append(true).open(home_dir).unwrap();
+                shell_config.write_all(b"\n");
+                let env_var = format!(
+                    "export {}=\"{}\"\n",
+                    &key[..].to_ascii_uppercase().trim_matches('\"'),
+                    &app.env_var_value.clone()[..]
+                );
+                shell_config.write_all(env_var.as_bytes());
                 app.editing = !app.editing;
             }
             ActiveList::PathList => {

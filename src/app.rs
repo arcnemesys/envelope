@@ -5,6 +5,7 @@ use std::env::{split_paths, var_os};
 use std::error;
 use std::fs::read_to_string;
 use std::fs::OpenOptions;
+use std::io::Error;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -40,8 +41,12 @@ pub struct App {
     pub running: bool,
     /// Houses the state indicating what a user is currently editing.
     pub currently_editing: Option<CurrentlyEditing>,
+    /// Currently activated list number.
     pub list_index: u32,
+    /// Currently active list widget.
     pub activated_list: ActiveList,
+    /// User shell
+    pub shell: String,
 }
 
 pub enum ActiveList {
@@ -86,6 +91,7 @@ impl App {
             activated_list: ActiveList::EnvList,
             path_var_value: String::new(),
             path_var_edit: String::new(),
+            shell: get_shell_config().unwrap(),
         }
     }
 
@@ -149,4 +155,23 @@ pub fn set_environment_variable(key: String, value: String) {
         .arg(bashrc_path)
         .spawn()
         .expect("Could not spawn process");
+}
+
+fn get_shell_config() -> Result<String, Error> {
+    let home = std::env::var("HOME").expect("Couldn't get user home directory");
+    let mut home_dir = std::path::PathBuf::from(home);
+    let mut shell = String::new();
+    for entry in home_dir.read_dir().expect("read dir failed") {
+        let entry = entry?;
+        let file_name = entry.file_name();
+        let file_name = file_name.to_str().unwrap();
+        match file_name {
+            ".bashrc" => {
+                shell = String::from(file_name);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(shell)
 }

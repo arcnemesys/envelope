@@ -3,7 +3,6 @@ use envelope::event::{Event, EventHandler};
 use envelope::handler::handle_key_events;
 use envelope::tui::Tui;
 use ratatui::style::Style;
-use ratatui::widgets::ListItem;
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
 
@@ -24,7 +23,8 @@ fn main() -> AppResult<()> {
             Event::Resize(_, _) => {}
         }
     }
-
+    let shell = app.shell.clone();
     tui.exit()?;
+    println!("Shell: {:?}", app.shell);
     Ok(())
 }
