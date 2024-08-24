@@ -124,13 +124,11 @@ pub enum CurrentlyEditing {
     PathVar,
 }
 
+// Reference code that may be deleted soon.
 pub fn set_environment_variable(key: String, value: String) {
     let home_dir = env::var("HOME").expect("Failed to get home directory.");
-
     let bashrc_path = Path::new(&home_dir).join(".bashrc");
-
     let mut bashrc_content = read_to_string(&bashrc_path).unwrap();
-
     let mut updated = false;
 
     let lines: Vec<String> = bashrc_content
@@ -158,6 +156,8 @@ pub fn set_environment_variable(key: String, value: String) {
 }
 
 fn get_shell_config() -> Result<String, Error> {
+    // This is quick and dirty, and will require much finer handling,
+    // to avoid duplicating variables un-necessarily.
     let home = std::env::var("HOME").expect("Couldn't get user home directory");
     let mut home_dir = std::path::PathBuf::from(home);
     let mut shell = String::new();

@@ -23,8 +23,6 @@ fn main() -> AppResult<()> {
             Event::Resize(_, _) => {}
         }
     }
-    let shell = app.shell.clone();
     tui.exit()?;
-    println!("Shell: {:?}", app.shell);
     Ok(())
 }
