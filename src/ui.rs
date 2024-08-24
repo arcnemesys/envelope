@@ -84,12 +84,8 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let footer_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
         .split(chunks[1]);
-    let control_span = Span::styled(
-        "exit: q/esc, edit: e, save: Enter, switch: Tab ",
-        Style::new().white(),
-    );
 
     let editor_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -98,13 +94,14 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     let edit_path = Paragraph::new(app.path_var_value.clone())
         .block(Block::default().borders(Borders::ALL).title("Edit Value"));
-    let control_footer = Paragraph::new(control_span)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(Title::from("Controls").alignment(Alignment::Center)),
-        )
-        .alignment(Alignment::Center);
+    let control_footer =
+        Paragraph::new("switch: ↹ (tab), exit: q/esc, edit: e, save: enter, navigate: ⇵")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(Title::from("Controls").alignment(Alignment::Center)),
+            )
+            .alignment(Alignment::Center);
 
     f.render_widget(edit_paragraph, editor_chunks[0]);
     f.render_widget(edit_path, editor_chunks[1]);
