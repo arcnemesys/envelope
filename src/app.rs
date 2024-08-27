@@ -47,6 +47,10 @@ pub struct App {
     pub activated_list: ActiveList,
     /// User shell
     pub shell: String,
+    /// Environment variables from .bashrc
+    shell_env_vars: HashMap<String, String>,
+    /// Shell config path
+    config_path: PathBuf
 }
 
 pub enum ActiveList {
@@ -62,9 +66,11 @@ impl App {
         path_list_state.select(Some(0));
         let env_vars = env::vars().collect();
         let mut path_var_dirs = Vec::new();
-
+        let shell = get_shell_config().unwrap();
+        let config_path = get_config_path;
         let key = "PATH";
         let path_var = var_os(key);
+        
 
         match path_var {
             Some(paths) => {
@@ -74,7 +80,7 @@ impl App {
             }
             None => println!("{key} not set in current environment."),
         }
-        App {
+        let app = App {
             env_vars,
             path_var_dirs,
             selected_env_var: 0,
@@ -91,8 +97,12 @@ impl App {
             activated_list: ActiveList::EnvList,
             path_var_value: String::new(),
             path_var_edit: String::new(),
-            shell: get_shell_config().unwrap(),
+            shell,
+            shell_env_vars: HashMap::new(),
+            config_path,
+
         }
+        app
     }
 
     pub fn selected_value(&self) -> &str {
@@ -117,7 +127,7 @@ impl App {
         }
     }
 }
-
+ 
 pub enum CurrentlyEditing {
     EnvVarValue,
     EnvVarName,
@@ -125,43 +135,12 @@ pub enum CurrentlyEditing {
 }
 
 // Reference code that may be deleted soon.
-pub fn set_environment_variable(key: String, value: String) {
-    let home_dir = env::var("HOME").expect("Failed to get home directory.");
-    let bashrc_path = Path::new(&home_dir).join(".bashrc");
-    let mut bashrc_content = read_to_string(&bashrc_path).unwrap();
-    let mut updated = false;
-
-    let lines: Vec<String> = bashrc_content
-        .lines()
-        .map(|line| {
-            if line.starts_with(&format!("export {}=", key)) {
-                updated = true;
-                format!("export {}=\"{}\"", key, value)
-            } else {
-                line.to_string()
-            }
-        })
-        .collect();
-
-    if !updated {
-        bashrc_content.push_str(&format!("\nexport {}\"{}\"\n", key, value));
-    } else {
-        bashrc_content = lines.join("\n");
-    }
-
-    Command::new("source")
-        .arg(bashrc_path)
-        .spawn()
-        .expect("Could not spawn process");
-}
 
 fn get_shell_config() -> Result<String, Error> {
-    // This is quick and dirty, and will require much finer handling,
-    // to avoid duplicating variables un-necessarily.
     let home = std::env::var("HOME").expect("Couldn't get user home directory");
-    let mut home_dir = std::path::PathBuf::from(home);
+    let mut home_path = std::path::PathBuf::from(home);
     let mut shell = String::new();
-    for entry in home_dir.read_dir().expect("read dir failed") {
+    for entry in home_path.read_dir().expect("read dir failed") {
         let entry = entry?;
         let file_name = entry.file_name();
         let file_name = file_name.to_str().unwrap();
@@ -174,4 +153,19 @@ fn get_shell_config() -> Result<String, Error> {
     }
 
     Ok(shell)
+}
+
+fn get_config_path() -> PathBuf {
+    let shell = get_shell_config();
+    let home = std::env::var("HOME").expect("Couldn't get user home directory");
+    let mut config_path = PathBuf::from(home).push(shell);
+
+    config_path
+    
+
+}
+pub fn get_shell_vars() -> HashMap<String, String> {
+    let config_path = get_config_path();
+
+    let config_file = File::read(true).open(config_path).unwrap()
 }
