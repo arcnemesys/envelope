@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-
+use std::collections::HashMap;
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub struct App {
@@ -67,10 +67,10 @@ impl App {
         let env_vars = env::vars().collect();
         let mut path_var_dirs = Vec::new();
         let shell = get_shell_config().unwrap();
-        let config_path = get_config_path;
+        let config_path = get_config_path();
         let key = "PATH";
         let path_var = var_os(key);
-        
+        let shell_env_vars = get_shell_vars(); 
 
         match path_var {
             Some(paths) => {
@@ -98,10 +98,10 @@ impl App {
             path_var_value: String::new(),
             path_var_edit: String::new(),
             shell,
-            shell_env_vars: HashMap::new(),
+            shell_env_vars,
             config_path,
 
-        }
+        };
         app
     }
 
@@ -156,16 +156,29 @@ fn get_shell_config() -> Result<String, Error> {
 }
 
 fn get_config_path() -> PathBuf {
-    let shell = get_shell_config();
+    let shell = get_shell_config().expect("Could not get shell config");
     let home = std::env::var("HOME").expect("Couldn't get user home directory");
-    let mut config_path = PathBuf::from(home).push(shell);
-
-    config_path
+    
+    let mut home_path = PathBuf::from(home);
+    home_path.push(shell);
+    home_path
     
 
 }
 pub fn get_shell_vars() -> HashMap<String, String> {
+    let mut config_map = HashMap::new();
     let config_path = get_config_path();
 
-    let config_file = File::read(true).open(config_path).unwrap();
+    let config_file_contents = read_to_string(config_path).expect("Could not read file to string");
+
+    for mut line in config_file_contents.lines() {
+        if line.starts_with("export") {
+            let mut env_tuple = line.trim_start_matches("export ").split_once('=');
+            let (env_var_name, env_var_value) = env_tuple.unwrap();
+            config_map.insert(env_var_name.to_owned(), env_var_value.to_owned());
+            // println!("name: {}, value: {}", env_var_name, env_var_value);
+        }
+    }
+
+    config_map
 }

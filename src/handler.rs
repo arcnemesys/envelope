@@ -1,4 +1,4 @@
-use crate::app::{set_environment_variable, ActiveList, App, AppResult};
+use crate::app::{ ActiveList, App, AppResult};
 use env_perm::{append, set};
 use globalenv::set_var;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -26,9 +26,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Char('e') => {
             if !app.editing {
                 app.editing = true;
-                // match app.activated_list {
-                //     ActiveList::EnvList
-                // }
                 app.env_var_value = app.selected_value().to_string();
             }
         }
