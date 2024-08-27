@@ -167,5 +167,5 @@ fn get_config_path() -> PathBuf {
 pub fn get_shell_vars() -> HashMap<String, String> {
     let config_path = get_config_path();
 
-    let config_file = File::read(true).open(config_path).unwrap()
+    let config_file = File::read(true).open(config_path).unwrap();
 }
