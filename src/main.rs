@@ -24,6 +24,6 @@ fn main() -> AppResult<()> {
         }
     }
     tui.exit()?;
-    get_shell_vars();
+    // println!("{:?}", app.shell_env_vars);
     Ok(())
 }

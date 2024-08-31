@@ -48,11 +48,9 @@ pub struct App {
     /// User shell
     pub shell: String,
     /// Environment variables from .bashrc
-    pub shell_env_vars: HashMap<String, String>,
+    shell_env_vars: HashMap<String, String>,
     /// Shell config path
-    pub config_path: PathBuf,
-    /// Overwriting signifier
-    pub overwrite: bool,
+    config_path: PathBuf
 }
 
 pub enum ActiveList {
@@ -61,7 +59,7 @@ pub enum ActiveList {
 }
 
 impl Default for App {
-    fn default() -> App {
+    pub fn default() -> App {
         let mut env_list_state = ratatui::widgets::ListState::default();
         env_list_state.select(Some(0));
         let mut path_list_state = ratatui::widgets::ListState::default();
@@ -102,16 +100,10 @@ impl Default for App {
             shell,
             shell_env_vars,
             config_path,
-            overwrite: false
 
         }
     }
-}
-    impl App {
 
-    pub fn new() -> Self {
-        App::default()
-    }
     pub fn selected_value(&self) -> &str {
         &self.env_vars[self.selected_env_var].1
     }
@@ -134,7 +126,6 @@ impl Default for App {
         }
     }
 }
-
  
 pub enum CurrentlyEditing {
     EnvVarValue,

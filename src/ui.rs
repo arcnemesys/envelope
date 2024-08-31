@@ -73,10 +73,15 @@ pub fn render(app: &mut App, f: &mut Frame) {
 
     f.render_stateful_widget(env_list, sub_chunks[0], &mut app.env_list_state);
     f.render_stateful_widget(path_list, sub_chunks[1], &mut app.path_list_state);
+    let overwrite_warning = "This environment variable value will be overwritten";
 
     let edit_paragraph = if app.editing {
+        if app.overwrite {
+            Paragraph::new(app.env_var_value.clone())
+                .block(Block::default().borders(Borders::ALL).title(format!("Warning: {}. Edit Value", overwrite_warning)))
+        } else {
         Paragraph::new(app.env_var_value.clone())
-            .block(Block::default().borders(Borders::ALL).title("Edit Value"))
+            .block(Block::default().borders(Borders::ALL).title("Edit Value"))}
     } else {
         Paragraph::new(app.selected_value())
             .block(Block::default().borders(Borders::ALL).title("Value"))

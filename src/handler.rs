@@ -19,10 +19,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.quit();
             }
         }
-        KeyCode::Esc => {
-            app.currently_editing = None;
-            app.editing = false;
-        }
         KeyCode::Char('e') => {
             if !app.editing {
                 app.editing = true;
@@ -97,6 +93,10 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         },
         KeyCode::Enter => match app.activated_list {
             ActiveList::EnvList => {
+                // Now that we have env vars stored in app state,
+                // we can check for values that would be overwritten
+                // or duplicated, display a pop up to the user,
+                // and make decisions based on the interaction
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
                 let home = std::env::var("HOME").expect("Couldn't get user home directory");
@@ -104,6 +104,10 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 home_dir.push(app.shell.clone());
                 let mut shell_config = OpenOptions::new().append(true).open(home_dir).unwrap();
                 shell_config.write_all(b"\n");
+                let env_var_key = key[..].to_ascii_uppercase().trim_matches('\"').to_owned();
+                if app.shell_env_vars.contains_key(&env_var_key) {
+                    app.overwrite = true; 
+                }
                 let env_var = format!(
                     "export {}=\"{}\"\n",
                     &key[..].to_ascii_uppercase().trim_matches('\"'),
