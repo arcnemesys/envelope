@@ -2,7 +2,6 @@ use envelope::app::{App, AppResult, get_shell_vars};
 use envelope::event::{Event, EventHandler};
 use envelope::handler::handle_key_events;
 use envelope::tui::Tui;
-use ratatui::style::Style;
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
 

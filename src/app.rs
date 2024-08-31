@@ -1,15 +1,9 @@
-use ratatui::widgets::List;
-use ratatui::widgets::ListItem;
 use std::env;
 use std::env::{split_paths, var_os};
 use std::error;
 use std::fs::read_to_string;
-use std::fs::OpenOptions;
 use std::io::Error;
-use std::io::Write;
-use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
 use std::collections::HashMap;
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 

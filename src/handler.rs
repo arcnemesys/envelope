@@ -1,11 +1,10 @@
 use crate::app::{ ActiveList, App, AppResult};
-use env_perm::{append, set};
 use globalenv::set_var;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::{
-    env::{self, join_paths, remove_var},
+    env::join_paths,
     path::PathBuf,
 };
 
@@ -99,11 +98,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 // and make decisions based on the interaction
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
-                let home = std::env::var("HOME").expect("Couldn't get user home directory");
-                let mut home_dir = std::path::PathBuf::from(home);
-                home_dir.push(app.shell.clone());
-                let mut shell_config = OpenOptions::new().append(true).open(home_dir).unwrap();
-                shell_config.write_all(b"\n");
+                let config_path = app.config_path.clone();
+                let mut shell_config = OpenOptions::new().append(true).open(&config_path).unwrap();
+                shell_config.write_all(b"\n").expect(&format!("Unable to write to: {:?}", config_path));
                 let env_var_key = key[..].to_ascii_uppercase().trim_matches('\"').to_owned();
                 if app.shell_env_vars.contains_key(&env_var_key) {
                     app.overwrite = true; 
