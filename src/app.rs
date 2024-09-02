@@ -148,8 +148,15 @@ fn get_shell_config() -> Result<String, Error> {
         let file_name = file_name.to_str().unwrap();
         match file_name {
             ".bashrc" => {
-                shell = String::from(file_name);
+                shell = String::from(file_name)
             }
+            ".zshrc" => {
+                shell = String::from(file_name)
+            } 
+            ".cshrc" => {
+                shell = String::from(file_name)
+            }
+            ".kshrc"
             _ => {}
         }
     }
