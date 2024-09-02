@@ -1,14 +1,13 @@
-use crate::app::{ ActiveList, App, AppResult};
+use crate::app::{ActiveList, App, AppResult};
 use globalenv::set_var;
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::{
-    env::join_paths,
-    path::PathBuf,
-};
+use std::{env::join_paths, path::PathBuf};
 
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+    let config_path = app.config_path.clone();
+    let mut shell_config = OpenOptions::new().append(true).open(&config_path).unwrap();
     match key_event.code {
         KeyCode::Char('q') | KeyCode::Esc => {
             app.quit();
@@ -44,7 +43,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                         app.env_var_value.pop();
                     }
                     ActiveList::PathList => {
-                        app.path_var_value.pop();
+                        app.path_var_edit.pop();
                     }
                 }
             }
@@ -98,30 +97,45 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 // and make decisions based on the interaction
                 app.env_vars[app.selected_env_var].1 = app.env_var_value.clone();
                 let key = app.env_vars[app.selected_env_var].0.clone();
-                let config_path = app.config_path.clone();
-                let mut shell_config = OpenOptions::new().append(true).open(&config_path).unwrap();
-                shell_config.write_all(b"\n").expect(&format!("Unable to write to: {:?}", config_path));
                 let env_var_key = key[..].to_ascii_uppercase().trim_matches('\"').to_owned();
                 if app.shell_env_vars.contains_key(&env_var_key) {
-                    app.overwrite = true; 
+                    app.overwrite = true;
                 }
                 let env_var = format!(
                     "export {}=\"{}\"\n",
-                    &key[..].to_ascii_uppercase().trim_matches('\"'),
+                    env_var_key,
                     &app.env_var_value.clone()[..]
                 );
-                shell_config.write_all(env_var.as_bytes());
+                write_to_config(&app, &env_var, &mut shell_config);
                 app.editing = !app.editing;
             }
             ActiveList::PathList => {
-                app.path_var_dirs[app.selected_path_dir] =
-                    PathBuf::from(app.path_var_value.clone());
-                let new_path = join_paths(app.path_var_dirs.clone())?;
-                set_var("PATH", new_path.to_str().unwrap());
+                app.path_var_dirs[app.selected_path_dir] = PathBuf::from(app.path_var_edit.clone());
+                let path_var = app.path_var_edit.clone();
+                let export_var = format!("export PATH=$PATH:{}\n", path_var,);
+
+                write_to_config(&app, &export_var, &mut shell_config);
                 app.editing = !app.editing;
             }
         },
         _ => {}
     }
     Ok(())
+}
+
+pub fn write_to_config(app: &App, config_var: &str, config_file: &mut File) {
+    if app.activated_list == ActiveList::PathList {
+        config_file
+            .write_all(b"\n")
+            .expect("Unable to write new line to config file");
+        config_file
+            .write_all(config_var.as_bytes())
+            .expect(&format!("Unable to write {:?} to config file", config_var));
+    } else if app.activated_list == ActiveList::EnvList {
+        config_file
+            .write_all(b"\n")
+            .expect("Unable to write new line to config file");
+        config.file.write_all(config_var.as_bytes())
+            ..expect(&format!("Unable to write {:?} to config file", config_var));
+    }
 }

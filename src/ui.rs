@@ -97,7 +97,7 @@ pub fn render(app: &mut App, f: &mut Frame) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(footer_chunks[0]);
 
-    let edit_path = Paragraph::new(app.path_var_value.clone())
+    let edit_path = Paragraph::new(app.path_var_edit.clone())
         .block(Block::default().borders(Borders::ALL).title("Edit Value"));
     let control_footer =
         Paragraph::new("switch: ↹ (tab), exit: q/esc, edit: e, save: enter, navigate: ⇵")
