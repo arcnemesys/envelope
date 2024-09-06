@@ -48,7 +48,7 @@ pub struct App {
     /// Overwriting signifier
     pub overwrite: bool,
 }
-
+#[derive(Debug, PartialEq)]
 pub enum ActiveList {
     EnvList,
     PathList,
@@ -66,7 +66,7 @@ impl Default for App {
         let config_path = get_config_path();
         let key = "PATH";
         let path_var = var_os(key);
-        let shell_env_vars = get_shell_vars(); 
+        let shell_env_vars = get_shell_vars();
 
         match path_var {
             Some(paths) => {
@@ -129,7 +129,7 @@ impl Default for App {
     }
 }
 
- 
+
 pub enum CurrentlyEditing {
     EnvVarValue,
     EnvVarName,
@@ -152,12 +152,14 @@ fn get_shell_config() -> Result<String, Error> {
             }
             ".zshrc" => {
                 shell = String::from(file_name)
-            } 
+            }
             ".cshrc" => {
                 shell = String::from(file_name)
             }
-            ".kshrc"
-            _ => {}
+            ".kshrc" => {
+                shell = String::from(file_name)
+            }
+            _ => { unreachable!() }
         }
     }
 
@@ -167,11 +169,11 @@ fn get_shell_config() -> Result<String, Error> {
 fn get_config_path() -> PathBuf {
     let shell = get_shell_config().expect("Could not get shell config");
     let home = std::env::var("HOME").expect("Couldn't get user home directory");
-    
+
     let mut home_path = PathBuf::from(home);
     home_path.push(shell);
     home_path
-    
+
 
 }
 pub fn get_shell_vars() -> HashMap<String, String> {
@@ -190,3 +192,81 @@ pub fn get_shell_vars() -> HashMap<String, String> {
 
     config_map
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::widgets::ListState;
+
+    #[test]
+    fn test_toggle_active_from_env_list() {
+        let mut app = App::default();
+        app.activated_list = ActiveList::EnvList;
+        app.list_index = 0;
+
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::PathList);
+        assert_eq!(app.list_index, 1);
+    }
+
+    #[test]
+    fn test_toggle_active_from_path_list() {
+        let mut app = App::default();
+        app.activated_list = ActiveList::PathList;
+        app.list_index = 1;
+
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::EnvList);
+        assert_eq!(app.list_index, 0);
+    }
+
+    #[test]
+    fn test_toggle_active_wraps_list_index() {
+        let mut app = App::default();
+        app.activated_list = ActiveList::EnvList;
+        app.list_index = 1;
+
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::PathList);
+        assert_eq!(app.list_index, 0);
+    }
+
+    #[test]
+    fn test_multiple_toggles() {
+        let mut app = App::default();
+        app.activated_list = ActiveList::EnvList;
+        app.list_index = 0;
+
+        app.toggle_active();
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::EnvList);
+        assert_eq!(app.list_index, 0);
+    }
+
+    #[test]
+    fn test_toggle_active_updates_list_states() {
+        let mut app = App::default();
+        app.activated_list = ActiveList::EnvList;
+        app.list_index = 0;
+        app.env_list_state.select(Some(3));
+        app.path_list_state.select(Some(2));
+
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::PathList);
+        assert_eq!(app.list_index, 1);
+        assert_eq!(app.env_list_state.selected(), Some(3));
+        assert_eq!(app.path_list_state.selected(), Some(2));
+
+        app.toggle_active();
+
+        assert_eq!(app.activated_list, ActiveList::EnvList);
+        assert_eq!(app.list_index, 0);
+        assert_eq!(app.env_list_state.selected(), Some(3));
+        assert_eq!(app.path_list_state.selected(), Some(2));
+    }
+}
+

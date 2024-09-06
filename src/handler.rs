@@ -135,7 +135,100 @@ pub fn write_to_config(app: &App, config_var: &str, config_file: &mut File) {
         config_file
             .write_all(b"\n")
             .expect("Unable to write new line to config file");
-        config.file.write_all(config_var.as_bytes())
-            ..expect(&format!("Unable to write {:?} to config file", config_var));
+        config_file.write_all(config_var.as_bytes())
+            .expect(&format!("Unable to write {:?} to config file", config_var));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::{File, remove_file};
+    use std::io::{Read, Seek, SeekFrom, Write};
+    use std::path::PathBuf;
+
+    fn create_test_app(activated_list: ActiveList) -> App {
+        let mut app = App::default();
+        app.activated_list = activated_list;
+        app
+    }
+
+    fn create_temp_file() -> (PathBuf, File) {
+        let path = format!(".bashrc");
+        let file = File::create(&path).unwrap();
+        (path.into(), file)
+    }
+
+    #[test]
+    fn test_write_to_config_path_list() {
+        let app = create_test_app(ActiveList::PathList);
+        let (path, mut file) = create_temp_file();
+        let config_var = "export PATH=$PATH:/new/path";
+
+        write_to_config(&app, config_var, &mut file);
+
+        let mut contents = String::new();
+        file.seek(SeekFrom::Start(0)).unwrap();
+        file.read_to_string(&mut contents).unwrap();
+
+        assert_eq!(contents, format!("\n{}", config_var));
+
+        remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_write_to_config_env_list() {
+        let app = create_test_app(ActiveList::EnvList);
+        let (path, mut file) = create_temp_file();
+        let config_var = "export NEW_VAR=value";
+
+        write_to_config(&app, config_var, &mut file);
+
+        let mut contents = String::new();
+        file.seek(SeekFrom::Start(0)).unwrap();
+        file.read_to_string(&mut contents).unwrap();
+
+        assert_eq!(contents, format!("\n{}", config_var));
+
+        remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_write_to_config_multiple_writes() {
+        let app = create_test_app(ActiveList::EnvList);
+        let (path, mut file) = create_temp_file();
+        let config_var1 = "export VAR1=value1";
+        let config_var2 = "export VAR2=value2";
+
+        write_to_config(&app, config_var1, &mut file);
+        write_to_config(&app, config_var2, &mut file);
+
+        let mut contents = String::new();
+        file.seek(SeekFrom::Start(0)).unwrap();
+        file.read_to_string(&mut contents).unwrap();
+
+        assert_eq!(contents, format!("\n{}\n{}", config_var1, config_var2));
+
+        remove_file(path).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to write new line to config file")]
+    fn test_write_to_config_file_write_error() {
+        use std::fs::OpenOptions;
+
+        let app = create_test_app(ActiveList::EnvList);
+        let (path, _) = create_temp_file();
+        let config_var = "export ERROR_VAR=value";
+
+        // Open the file in read-only mode to simulate a write error
+        let mut read_only_file = OpenOptions::new()
+            .read(true)
+            .open(&path)
+            .unwrap();
+
+        write_to_config(&app, config_var, &mut read_only_file);
+
+        remove_file(path).unwrap();
     }
 }
