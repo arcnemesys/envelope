@@ -1,10 +1,10 @@
+use std::collections::HashMap;
 use std::env;
 use std::env::{split_paths, var_os};
 use std::error;
 use std::fs::read_to_string;
 use std::io::Error;
 use std::path::PathBuf;
-use std::collections::HashMap;
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub struct App {
@@ -76,7 +76,7 @@ impl Default for App {
             }
             None => println!("{key} not set in current environment."),
         }
-         App {
+        App {
             env_vars,
             path_var_dirs,
             selected_env_var: 0,
@@ -96,13 +96,11 @@ impl Default for App {
             shell,
             shell_env_vars,
             config_path,
-            overwrite: false
-
+            overwrite: false,
         }
     }
 }
-    impl App {
-
+impl App {
     pub fn new() -> Self {
         App::default()
     }
@@ -129,7 +127,6 @@ impl Default for App {
     }
 }
 
-
 pub enum CurrentlyEditing {
     EnvVarValue,
     EnvVarName,
@@ -147,19 +144,12 @@ fn get_shell_config() -> Result<String, Error> {
         let file_name = entry.file_name();
         let file_name = file_name.to_str().unwrap();
         match file_name {
-            ".bashrc" => {
-                shell = String::from(file_name)
+            ".bashrc" => shell = String::from(file_name),
+            ".zshrc" => shell = String::from(file_name),
+            ".cshrc" => shell = String::from(file_name),
+            ".kshrc" => shell = String::from(file_name),
+            _ => {
             }
-            ".zshrc" => {
-                shell = String::from(file_name)
-            }
-            ".cshrc" => {
-                shell = String::from(file_name)
-            }
-            ".kshrc" => {
-                shell = String::from(file_name)
-            }
-            _ => { unreachable!() }
         }
     }
 
@@ -173,8 +163,6 @@ fn get_config_path() -> PathBuf {
     let mut home_path = PathBuf::from(home);
     home_path.push(shell);
     home_path
-
-
 }
 pub fn get_shell_vars() -> HashMap<String, String> {
     let mut config_map = HashMap::new();
@@ -269,4 +257,3 @@ mod tests {
         assert_eq!(app.path_list_state.selected(), Some(2));
     }
 }
-

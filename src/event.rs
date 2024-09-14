@@ -28,10 +28,17 @@ pub struct EventHandler {
     /// Event handler thread.
     handler: thread::JoinHandle<()>,
 }
-
 impl EventHandler {
-    /// Constructs a new instance of [`EventHandler`].
     pub fn new() -> Self {
+        EventHandler::default()
+    }
+        pub fn next(&self) -> AppResult<Event> {
+        Ok(self.receiver.recv()?)
+    }
+}
+impl Default for EventHandler {
+    /// Constructs a new instance of [`EventHandler`].
+    fn default() -> Self {
         let (sender, receiver) = mpsc::channel();
         let handler = {
             let sender = sender.clone();
@@ -60,13 +67,5 @@ impl EventHandler {
             receiver,
             handler,
         }
-    }
-
-    /// Receive the next event from the handler thread.
-    ///
-    /// This function will always block the current thread if
-    /// there is no data available and it's possible for more data to be sent.
-    pub fn next(&self) -> AppResult<Event> {
-        Ok(self.receiver.recv()?)
     }
 }
